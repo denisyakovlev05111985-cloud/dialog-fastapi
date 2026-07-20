@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <p id="status">Проверяем backend</p>
+
+    <script type="text/javascript" src="js/api.js"></script>
+    <script type="text/javascript">
+        api("/health", {}, false)
+            .then(()=>{
+                const status = document.getElementById("status");
+                status.textContent= "Backend подключен";
+            })
+            .catch((error)=>{
+                status.textContent = error.message;
+            })
+    </script>
+</body>
+</html>
