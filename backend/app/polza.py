@@ -1,113 +1,99 @@
 import httpx
+
 from app.config import settings
-from typing import Any, List, Dict
+from typing import Any
 
 class PolzaError(Exception):
     pass
 
+
 class PolzaClient:
-    def __init__(self) -> None:
+    def __init__(self)-> None:
         self.client = httpx.AsyncClient(
             base_url=settings.polza_api_base_url,
-            timeout=settings.polza_timeout_seconds,
+            timeout=settings.polza_timeout_seconds
         )
 
     async def close(self) -> None:
         await self.client.aclose()
 
-    def headers(self) -> Dict[str, str]:
-        return {"Authorization": f"Bearer {settings.polza_api_key}"}
+    def headers(self) -> dict[str, str]:
+        return { "Authorization": f"Bearer {settings.polza_api_key}"}     
 
-    async def list_models(self) -> List[Dict[str, str]]:
+    async def list_models(self) -> list[dict[str, str]]:
         response = await self._request("GET", "/models")
-        payload = self._json(response)
-        raw_data = payload.get("data") or []
-
-        if not isinstance(raw_data, list):
-            raise PolzaError("Polza.ai вернул неверный формат поля data")
-
         models = []
-        for item in raw_data:
-            if not isinstance(item, dict):
-                continue
-            if not self._is_chat_model(item):
+        for item in self._json(response).get("data", []):
+            if not isinstance(item, dict) or not self._is_chat_model(item):
                 continue
 
             model_id = item.get("id")
             if isinstance(model_id, str) and model_id:
-                name = item.get("name") or ""
+                name = item.get("name")
                 models.append({"id": model_id, "name": name})
 
-        return sorted(models, key=lambda m: m["name"].lower())
+        return sorted(models, key=lambda model: model["name"].lower())
 
-    async def complete(
-        self,
-        model_id: str,
-        messages: List[Dict[str, str]],
-    ) -> str:
+    async def complete(self, model_id: str, messages: list[dict[str, str]]) -> str:
         if not settings.polza_api_key:
             raise PolzaError("На сервере не настроен POLZA_API_KEY")
 
         response = await self._request(
             "POST",
             "/chat/completions",
-            json={"model": model_id, "messages": messages},
+            json={"model": model_id, "messages": messages}
         )
 
-        payload = self._json(response)
-
         try:
-            content = payload["choices"][0]["message"]["content"]
+            content = self._json(response)["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
             raise PolzaError("Polza.ai вернул ответ неизвестного формата") from exc
 
         if not isinstance(content, str) or not content.strip():
             raise PolzaError("Модель вернула пустой ответ")
 
-        return content
+        return content.strip()
 
-    async def _request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
+    async def _request(self, method: str, path: str, **kwargs: Any):
         try:
             response = await self.client.request(
-                method,
-                path,
-                headers=self.headers(),
-                **kwargs,
+                method, path, headers=self.headers(), **kwargs
             )
         except httpx.TimeoutException as exc:
-            raise PolzaError("Polza.ai не ответил за отведённое время") from exc
+            raise PolzaError("Polza.ai не ответил за отведенное время") from exc
         except httpx.HTTPError as exc:
-            raise PolzaError("Не удалось подключиться к Polza.ai") from exc
+            raise PolzaError("Не удалось подключится к Polza.ai") from exc
 
         if response.is_success:
             return response
 
-        # Обработка ошибки от API
-        message = None
         try:
-            error_payload = response.json()
-            if isinstance(error_payload, dict):
-                message = error_payload.get("error", {}).get("message")
+            message = response.json().get("error", {}).get("message")
         except (AttributeError, ValueError):
-            pass
-
-        raise PolzaError(message or "Polza.ai вернул ошибку")
+            message = None
+            raise PolzaError(message or "Polza.ai вернул ошибку")
 
     @staticmethod
-    def _json(response: httpx.Response) -> Dict[str, Any]:
+    def _json(response: httpx.Response) -> dict[str, Any]:
         try:
             payload = response.json()
         except ValueError as exc:
-            raise PolzaError("Polza.ai вернул некорректный JSON") from exc
+            raise PolzaError("Polza.ai вернул неккоректный ответ")
 
         if not isinstance(payload, dict):
             raise PolzaError("Polza.ai вернул ответ неизвестного формата")
+
         return payload
 
-    @staticmethod
-    def _is_chat_model(model: Dict[str, Any]) -> bool:
-        endpoints = model.get("endpoints") or []
-        return model.get("type") == "chat" or "/v1/chat/completions" in endpoints
 
+    @staticmethod
+    def _is_chat_model(model: dict[str, Any]) -> bool:
+        endpoints = model.get("endpoints") or []
+        return model.get("type") == "chat" or "/va/chat/completions" in endpoints
 
 polza = PolzaClient()
+
+
+
+
+        
