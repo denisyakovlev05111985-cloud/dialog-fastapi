@@ -3,21 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Вход = Dialog</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-ink: #1d1d1d;
+            --color-muted: #6f709c;
+            --shadow-soft: 0 12px 36px rgba(24, 24, 22, 0.06);
+        }
+
+        @utility auth-grid {
+            background-color: #f3f3f0;
+        }
+    </style>
 </head>
-<body>
-    <p id="status">Проверяем backend</p>
+<body class="min-w-[320px] bg-white text-sm text-ink">
+    <div class="flex h-screen overflow-hidden bg-white">
+        <div 
+            id ="sidebarBackdrop" 
+            class="inset-0 z-30 hidden bg-black/20"></div>
+
+        <aside id="sidebar" class=" inset-y-0 left-0 z-40 flex w-[280px] -translate-x-full flex-col border-r border-stone-200 bg-panel lg:w-[248px] lg:-translate-x-0">
+        
+        <div class="h-16 flex items-center justify-between px-4">
+            <a href="/" class="initial-flex items-center gap-2.5 text-int no-underline">
+                <span class="text-base font-semibold">dialog</span>    
+            </a>  
+
+        <button id="sidebarClose" class="rounded-lg p-2 text-stone-500 lg:hidden">
+            x
+        </button>
+        </div>
+        <div class="px-3">
+            <button id="newChatButton" class="flex h-10 w-full items-center justify-between rounded-lg border border-stone-300 bg-white px-3 font-medium shadow-sm" type="button">
+                <span class="flex items-center gap-2">Новый чат</span>
+            </button> 
+            
+        <label class="relative mt-3 block">
+            <input type="text" id="chatSearch" class="h-9 w-full rounded-lg border border-transparent bg-stone-200/70 pl-7 pr-3 text-xs outline-none placeholder:text-stone-400 focus:bg-white"
+                type="search" placeholder="Поиск чатов"
+            />  
+        </label>
+        </div>
+
+        <naw id="chatHistory" class="mt-5 flex-1 space-y-1 overflow-y-auto px-2"></naw>
+        <p 
+            id="emptyHistory"
+            class="hidden px-5 py-8 text-center text-xs text-stone-500"
+        >Здесь появятся ваши сохраненные чаты</p>
+
+        <div class="border-t border-stone-300/70 p-3">
+         <div class="mb-2 flex items-center gap-3 rounded-lg px-2 py-2">
+            <span id="profileAvatar" class="grid size-8 shrink-0 place-items-center rounded-full bg-stone-800 text-xs text-white font-semibold">-</span>  
+        
+            <span class="min-w-0 flex-1">
+                <strong id="profileName" class="block truncate text-xs font-semibold">
+                Загрузка...  
+                </strong>
+                <span id="profileEmail" class="block truncate text-xs text-stone-500"></span>
+            </span>
+         </div>   
+        <button id="logoutButton" type="button" class="flex h-9 w-full items-center gap-2 rounded-lg px-2 font-medium text-stone-600">Выйти</button>
+        </div>
+        
+        </aside>
+
+        <main class="flex min-w-0 flex-1 flex-col">
+            <header class="flex h-16 shrink-0 items-center justify-between border-b border-stone-200 px-4 sm:px-6">
+             <div class="flex min-w-0 items-center gap-3">
+                <button id="sidebarOpen" class="-ml-2 rounded-lg p-2 text-stone-500 lg:hidden">o</button>
+
+                <div class="min-w-0">
+                    <h1 id="chatTitle" class="truncate text-sm font-semibold">Новый чат</h1>  
+                    <span id="saveStatus" class="text-xs text-stone-400">Сохранено</span> 
+                </div>
+            </div>
+            
+            <button type="button" id="deleteChatButton" class="hidden rounded-lg p-2 text-stone-400">x</button>
+            </header>
+
+            <div id="chatViewport" class="flex-1 min-h-0 overflow-y-auto">
+                <section id="emptyState" class="mx-auto flex h-full max-w-xl flex-col items-center justify-center px-6 pb-20 text-center">  
+                    <h2 class="text-2xl font-semibold">Что будем делать?</h2>
+                    <p class="mt-2 text-muted">Напишите задачу или выберите один из примеров</p>
+                </section>
+
+                <section id="messages" class="mx-auto hidden w-full max-w-3xl space-y-7 px-4 py-8 sm:px-8"></section>
+            </div>
+
+
+              <footer class="shrink-0 px-3 pb-2 sm:px-6 sm:pb-5">
+        <div id="globalError" class="mx-auto mb-2 hidden max-w-3xl rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert"></div> 
+        
+        <form id="chatForm" class="mx-auto max-w-3xl rounded-2xl border border-stone-300 bg-white p-2">
+            <textarea id="messageInput" class="block max-h-44 min-h-12 w-full resize-none border-0 px-2 py-2 text-sm outline-none placeholder:text-stone-400" rows="1" maxlength="=8000" placeholder="Сообщение... "></textarea>
+        
+            <div class="flex items-center justify-between gap-3 px-1 pb-1">
+                <label class="min-w-0 max-w-[75%]">
+                    <select id="modelSelect" class="h-9 max-w-full truncate rounded-lg bg-stone-100 py-0 pl-3 pr-8 text-xs font-medium">
+                        <option>Загрузка моделей... </option>   
+                    </select>  
+                </label> 
+
+            <div class="flex shrink-0 items-center gap-2">
+                <span id="charCount" class="hidden text-[10px] text-stone-400 sm:block">0/8000</span>   
+                <button id="sendButton" class="grid size-9 place-items-center rounded-lg bg-stone-900 text-white disabled:cursor-not-allowed disabled:bg-stone-300">*</button>
+            </div>
+            </div>
+        
+        </form>
+
+        <p class="mt-2 text-center text-[10px] text-stone-400"> Модель может ошибаться. Проверяйте ответы.</p>
+
+    </footer>
+    
+    
+        </main>
+
+    </div>
+
+  
 
     <script type="text/javascript" src="js/api.js"></script>
-    <script type="text/javascript">
-        api("/health", {}, false)
-            .then(()=>{
-                const status = document.getElementById("status");
-                status.textContent= "Backend подключен";
-            })
-            .catch((error)=>{
-                status.textContent = error.message;
-            })
-    </script>
+    <script type="text/javascript" src="js/chat.js"></script>
 </body>
 </html>
