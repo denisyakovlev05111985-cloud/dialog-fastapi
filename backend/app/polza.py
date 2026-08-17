@@ -4,7 +4,9 @@ from app.config import settings
 from typing import Any
 
 class PolzaError(Exception):
-    pass
+    def __init__(self, message, status_code: int = 502):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 class PolzaClient:
@@ -18,7 +20,7 @@ class PolzaClient:
         await self.client.aclose()
 
     def headers(self) -> dict[str, str]:
-        return { "Authorization": f"Bearer {settings.polza_api_key}"}     
+        return {"Authorization": f"Bearer {settings.polza_api_key}"}     
 
     async def list_models(self) -> list[dict[str, str]]:
         response = await self._request("GET", "/models")
@@ -54,8 +56,9 @@ class PolzaClient:
 
         return content.strip()
 
-    async def _request(self, method: str, path: str, **kwargs: Any):
+    async def _request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         try:
+            print(path, method, self.headers(), self.client.base_url, settings.polza_api_base_url)
             response = await self.client.request(
                 method, path, headers=self.headers(), **kwargs
             )
@@ -89,7 +92,7 @@ class PolzaClient:
     @staticmethod
     def _is_chat_model(model: dict[str, Any]) -> bool:
         endpoints = model.get("endpoints") or []
-        return model.get("type") == "chat" or "/va/chat/completions" in endpoints
+        return model.get("type") == "chat" or "/v1/chat/completions" in endpoints
 
 polza = PolzaClient()
 

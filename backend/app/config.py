@@ -28,8 +28,8 @@ class Settings:
             jwt_secret_key=os.getenv("JWT_SECRET_KEY", DEFAULT_SECRET),
             jwt_expire_minutes=int(os.getenv("JWT_EXPIRE_MINUTES", 60)),
             cookie_secure=os.getenv("COOKIE_SECURE", False),
-            polza_api_key=os.getenv("POLZA_API_KEY", "").strip(),
-            polza_api_base_url=os.getenv("POLZA_API_BASE_URL","https://polza.api/api/v1").rstrip("/"),
+            polza_api_key=os.getenv("POLZA_API_KEY", "pza_AKFCtaKBJLC3IkSzXYKumdXQii7cy_30").strip(),
+            polza_api_base_url=os.getenv("POLZA_API_BASE_URL","https://polza.ai/api/v1").rstrip("/"),
             polza_timeout_seconds=int(os.getenv("POLZA_TIMEOUT_SECONDS", 120)),
             max_chat_history_messages=int(os.getenv("MAX_CHAT_HISTORY_MESSAGES", 40))
 )
