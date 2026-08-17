@@ -69,9 +69,9 @@ class ModelResponse(BaseModel):
     id: str
     name: str
 
-def required_chat(chat_id: int, user_id: int, db: Session) -> Chat:
-    chat = db.scalar(select(Chat.id == chat_id, Chat.user_id == user_id))
-
+def required_chat(chat_id: int, user_id: int, db:Session) -> Chat:
+    chat = db.scalar(select(Chat).where(Chat.id == chat_id, Chat.user_id == user_id))
+  
     if not chat:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -90,12 +90,10 @@ async def list_models() -> list[dict[str, str]]:
 
         )
 @router.get("/chats", response_model=list[ChatResponse])
-async def list_chats(user: CurrentUser, db: DbSession):
+def list_chats(user: CurrentUser, db: DbSession):
     return list(
-        # db.scalar(
-        #     select (Chat)
-        #         .where(Chat.user_id == user.id)
-        #         .order_by(Chat.updated_at.desc()))
+                db.scalars(
+                    select (Chat).where(Chat.user_id == user.id).order_by(Chat.updated_at.desc()))
 
                 )
 
@@ -143,7 +141,7 @@ async def send_message(
 ) -> SendMessageResponse:
     chat = required_chat(chat_id, user.id, db)
     recent = list(
-        db.scalar(
+        db.scalars(
             select(Message)
             .where(Message.chat_id == chat.id)
             .order_by(Message.created_at)

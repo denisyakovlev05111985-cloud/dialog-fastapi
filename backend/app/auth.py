@@ -109,7 +109,6 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-
 def register(payload: RegisterRequest, response: Response, db: DbSession):
     user = User(
         name=payload.name, 
@@ -136,7 +135,7 @@ def register(payload: RegisterRequest, response: Response, db: DbSession):
 def login(payload: LoginRequest, response: Response, db: DbSession) -> AuthResponse:
     email = str(payload.email).lower()
     user = db.scalar(select(User).where(User.email == email))
-
+    print(payload, user)
     if not user or not password_hash.verify(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

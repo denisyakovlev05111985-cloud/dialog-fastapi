@@ -133,7 +133,7 @@ function createMessageElement(message) {
 async function renderMessages(messages) {
     elements.messages.replaceChildren(...messages.map(createMessageElement));
     
-    scrollToBottom();
+    // scrollToBottom();
 }
 
 function startNewChat() {
@@ -186,7 +186,7 @@ async function sendMessage(content) {
         elements.messages.appendChild(
             createMessageElement({ role: "user", content})
         );
-        scrollToBottom()
+        // scrollToBottom()
 
         const result = await api(`/api/chats/${state.currentChatId}/messages`, {
             method: "POST",
@@ -201,7 +201,7 @@ async function sendMessage(content) {
         );
         elements.chatTitle.textContent = result.chat.title;
         await refreshChats();
-        scrollToBottom();
+        // scrollToBottom();
     } catch(e) {
         showError(e.message);
     } finally {
